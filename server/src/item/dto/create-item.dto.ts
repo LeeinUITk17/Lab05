@@ -7,4 +7,11 @@ export class CreateItemDto {
   @IsNotEmpty()
   @IsString()
   Upload: string;
+  @IsNotEmpty()
+  @IsString()
+  latitude: number;
+
+  @IsNotEmpty()
+  @IsString()
+  longitude: number;
 }

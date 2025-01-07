@@ -1,109 +1,167 @@
-import { StyleSheet, Image, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, FlatList, StyleSheet, Image, Text, Modal, TouchableOpacity } from 'react-native';
+import { Button } from 'react-native-paper';
+import { getPlaces } from '../../service/placeService';
+import { useRouter } from 'expo-router';
+import MapView, { Marker } from 'react-native-maps';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-
-export default function TabTwoScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
-  );
+interface Place {
+  id: string;
+  title: string;
+  Upload: string;
+  latitude: string;
+  longitude: string;
 }
 
+const PlaceScreen = () => {
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  
+  const router = useRouter();
+
+  useEffect(() => {
+    fetchPlaces();
+  }, []);
+
+  const fetchPlaces = async () => {
+    setLoading(true);
+    try {
+      const data = await getPlaces();
+      console.log('Places:', data);
+      setPlaces(data);
+    } catch (error) {
+      console.error('Error fetching places:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectPlace = (place: Place) => {
+    setSelectedPlace(place);
+    setModalVisible(true);
+  };
+
+  const renderPlaceMarker = (place: Place) => (
+    <Marker
+      coordinate={{
+        latitude: parseFloat(place.latitude),
+        longitude: parseFloat(place.longitude),
+      }}
+      key={place.id}
+      title={place.title}
+      description={place.title}
+      onPress={() => handleSelectPlace(place)}
+    >
+      <Image source={{ uri: place.Upload }} style={styles.markerImage} />
+    </Marker>
+  );
+
+  return (
+    <View style={styles.container}>
+      {loading ? (
+        <Text style={styles.loadingText}>Loading...</Text>
+      ) : (
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: 10.8231, 
+            longitude: 106.6297,  
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        >
+          {places.map(renderPlaceMarker)}
+        </MapView>
+      )}
+      <Modal
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          {selectedPlace && (
+            <View style={styles.modalContent}>
+              <Image source={{ uri: selectedPlace.Upload }} style={styles.modalImage} />
+              <Text style={styles.modalTitle}>{selectedPlace.title}</Text>
+              <Text style={styles.modalInfo}>Latitude: {selectedPlace.latitude}</Text>
+              <Text style={styles.modalInfo}>Longitude: {selectedPlace.longitude}</Text>
+                <Button
+                onPress={() => setModalVisible(false)}
+                style={styles.closeButton}
+                labelStyle={styles.closeButtonLabel}
+                mode="contained"
+                >
+                X
+                </Button>
+            </View>
+          )}
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  loadingText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+  },
+  map: {
+    flex: 1,
+  },
+  markerImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    width: '80%',
+  },
+  modalImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalInfo: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  closeButton: {
+    marginTop: 20,
+    backgroundColor: '#f44336', 
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    width: '80%',
+    alignSelf: 'center', 
+  },
+  closeButtonLabel: {
+    color: '#fff',  
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
+
+export default PlaceScreen;

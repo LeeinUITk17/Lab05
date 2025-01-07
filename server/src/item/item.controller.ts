@@ -15,14 +15,14 @@ export class ItemController {
     return this.itemService.uploadImage(file, item);
   }
 
-  @Post('upload-video')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadVideo(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() item: CreateItemDto,
-  ) {
-    return this.itemService.uploadVideo(file, item);
-  }
+  // @Post('upload-video')
+  // @UseInterceptors(FileInterceptor('file'))
+  // async uploadVideo(
+  //   @UploadedFile() file: Express.Multer.File,
+  //   @Body() item: CreateItemDto,
+  // ) {
+  //   return this.itemService.uploadVideo(file, item);
+  // }
   @Get()
   getAll() {
     return this.itemService.getAll();

@@ -16,6 +16,8 @@ export class ItemService {
         data: {
           title: Item.title,
           Upload: uploadResponse.secure_url,
+          latitude: Item.latitude.toString(),
+          longitude: Item.longitude.toString(),
         },
       });
 
@@ -25,21 +27,21 @@ export class ItemService {
     }
   }
 
-  async uploadVideo(file: Express.Multer.File, Item: CreateItemDto) {
-    try {
-      const uploadResponse = await this.cloudinaryService.uploadVideo(file);
-      const savedVideo = await this.prismaService.item.create({
-        data: {
-          title: Item.title,
-          Upload: uploadResponse.secure_url,
-        },
-      });
+  // async uploadVideo(file: Express.Multer.File, Item: CreateItemDto) {
+  //   try {
+  //     const uploadResponse = await this.cloudinaryService.uploadVideo(file);
+  //     const savedVideo = await this.prismaService.item.create({
+  //       data: {
+  //         title: Item.title,
+  //         Upload: uploadResponse.secure_url,
+  //       },
+  //     });
 
-      return savedVideo;
-    } catch (error) {
-      throw new Error(`Failed to upload video: ${error.message}`);
-    }
-  }
+  //     return savedVideo;
+  //   } catch (error) {
+  //     throw new Error(`Failed to upload video: ${error.message}`);
+  //   }
+  // }
   async getAll() {
     return this.prismaService.item.findMany();
   }
